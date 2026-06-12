@@ -19,7 +19,9 @@ import {
   Lock,
   Unlock,
   Copy,
-  Check
+  Check,
+  Sun,
+  Moon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { challenges, tableSchemas } from './data/challenges';
@@ -40,6 +42,23 @@ interface Badge {
 function App() {
   const [activeChallengeId, setActiveChallengeId] = useState<number>(1);
   const [difficultyFilter, setDifficultyFilter] = useState<string>("All");
+  
+  // Theme state
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    const saved = localStorage.getItem('sqlizor_theme');
+    return (saved as "dark" | "light") || "dark";
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sqlizor_theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
   const [editorSql, setEditorSql] = useState<string>("");
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -268,14 +287,14 @@ function App() {
       case "Beginner": return "text-emerald-400 border-emerald-500/20 bg-emerald-500/5";
       case "Intermediate": return "text-amber-400 border-amber-500/20 bg-amber-500/5";
       case "Advanced": return "text-rose-400 border-rose-500/20 bg-rose-500/5";
-      default: return "text-zinc-400";
+      default: return "text-textSubtle";
     }
   };
 
   const getCompanyColor = (company: string) => {
     switch (company) {
       case "Amazon": return "bg-orange-500/10 text-orange-400 border-orange-500/20";
-      case "Uber": return "bg-zinc-500/15 text-zinc-300 border-zinc-500/20";
+      case "Uber": return "bg-zinc-500/15 text-textSecondary border-zinc-500/20";
       case "Meta": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
       case "Netflix": return "bg-red-500/10 text-red-400 border-red-500/20";
       case "Stripe": return "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
@@ -362,24 +381,24 @@ function App() {
   const levelProgress = ((xp % 300) / 300) * 100;
 
   return (
-    <div className="min-h-screen bg-[#0C0C0C] text-[#D7E2EA] font-sans flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-bgMain text-textPrimary font-sans flex flex-col relative overflow-x-hidden">
       
       {/* 1. Header */}
-      <header className="border-b border-[#D7E2EA]/10 bg-[#111111]/70 backdrop-blur-md px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 z-10">
+      <header className="border-b border-borderMain bg-headerSubtle70 backdrop-blur-md px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 z-10">
         <div className="flex items-center gap-3">
           <GraduationCap className="w-8 h-8 text-purple-500 animate-pulse" />
           <div>
             <h1 className="text-xl font-bold tracking-wider uppercase bg-gradient-to-r from-[#646973] to-[#BBCCD7] bg-clip-text text-transparent">
               SQLizor
             </h1>
-            <p className="text-xs text-zinc-500 uppercase tracking-widest font-mono">zero to hero compiler</p>
+            <p className="text-xs text-textSubtle uppercase tracking-widest font-mono">zero to hero compiler</p>
           </div>
         </div>
 
         {/* Gamification Header Metrics */}
         <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
           {/* Level & XP Progress Bar */}
-          <div className="flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-4 py-2 min-w-[200px]">
+          <div className="flex items-center gap-3 bg-subtleBg border border-borderMain rounded-2xl px-4 py-2 min-w-[200px]">
             <span className="font-bold text-purple-400">LVL {level}</span>
             <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden relative">
               <div 
@@ -387,18 +406,28 @@ function App() {
                 style={{ width: `${levelProgress}%` }}
               ></div>
             </div>
-            <span className="text-[10px] text-zinc-400">{xp % 300}/300 XP</span>
+            <span className="text-[10px] text-textSubtle">{xp % 300}/300 XP</span>
           </div>
 
           {/* Daily Streak */}
-          <div className="flex items-center gap-2 border border-white/5 rounded-2xl px-4 py-2 bg-white/5">
+          <div className="flex items-center gap-2 border border-borderMain rounded-2xl px-4 py-2 bg-subtleBg">
             <Flame className={`w-4 h-4 ${streak > 0 ? "text-orange-500 animate-bounce" : "text-zinc-600"}`} />
-            <span className="font-semibold text-zinc-300">Streak: {streak} Day{streak !== 1 ? "s" : ""}</span>
+            <span className="font-semibold text-textSecondary">Streak: {streak} Day{streak !== 1 ? "s" : ""}</span>
           </div>
 
-          <div className="bg-white/5 border border-white/5 rounded-2xl px-4 py-2">
+          <div className="bg-subtleBg border border-borderMain rounded-2xl px-4 py-2 text-textSecondary">
             <span>Progress: {solvedChallenges.length} / {challenges.length} Solved</span>
           </div>
+
+          {/* Theme Toggle Button */}
+          <button 
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="flex items-center justify-center gap-2 border border-borderMain rounded-2xl px-4 py-2 bg-subtleBg hover:bg-activeBg text-textSecondary transition-all"
+            title="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-purpleAccent" />}
+            <span className="font-semibold capitalize text-xs">{theme === 'dark' ? 'Light' : 'Dark'} Mode</span>
+          </button>
         </div>
       </header>
 
@@ -406,16 +435,16 @@ function App() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden h-[calc(100vh-4.75rem)]">
         
         {/* LEFT COLUMN (Sidebar & Task details) - 5 Cols */}
-        <div className="lg:col-span-5 border-r border-[#D7E2EA]/10 flex flex-col h-full overflow-hidden">
+        <div className="lg:col-span-5 border-r border-borderMain flex flex-col h-full overflow-hidden">
           
           {/* Toggle Tab Selectors */}
-          <div className="flex border-b border-[#D7E2EA]/10 bg-[#161616]/30">
+          <div className="flex border-b border-borderMain bg-cardSubtle30">
             <button
               onClick={() => setActiveTab("challenges")}
               className={`flex-1 py-3 text-xs uppercase font-mono tracking-wider font-semibold border-b-2 transition-all flex items-center justify-center gap-2 ${
                 activeTab === "challenges"
                   ? "border-purple-500 text-white bg-purple-500/5"
-                  : "border-transparent text-zinc-400 hover:text-white"
+                  : "border-transparent text-textSubtle hover:text-textPrimary"
               }`}
             >
               <Layers className="w-4 h-4" /> Challenges
@@ -425,7 +454,7 @@ function App() {
               className={`flex-1 py-3 text-xs uppercase font-mono tracking-wider font-semibold border-b-2 transition-all flex items-center justify-center gap-2 ${
                 activeTab === "achievements"
                   ? "border-purple-500 text-white bg-purple-500/5"
-                  : "border-transparent text-zinc-400 hover:text-white"
+                  : "border-transparent text-textSubtle hover:text-textPrimary"
               }`}
             >
               <Trophy className="w-4 h-4" /> Achievements
@@ -435,7 +464,7 @@ function App() {
               className={`flex-1 py-3 text-xs uppercase font-mono tracking-wider font-semibold border-b-2 transition-all flex items-center justify-center gap-2 ${
                 activeTab === "interview"
                   ? "border-purple-500 text-white bg-purple-500/5"
-                  : "border-transparent text-zinc-400 hover:text-white"
+                  : "border-transparent text-textSubtle hover:text-textPrimary"
               }`}
             >
               <BookOpen className="w-4 h-4" /> Case Studies
@@ -445,7 +474,7 @@ function App() {
               className={`flex-1 py-3 text-xs uppercase font-mono tracking-wider font-semibold border-b-2 transition-all flex items-center justify-center gap-2 ${
                 activeTab === "qa"
                   ? "border-purple-500 text-white bg-purple-500/5"
-                  : "border-transparent text-zinc-400 hover:text-white"
+                  : "border-transparent text-textSubtle hover:text-textPrimary"
               }`}
             >
               <GraduationCap className="w-4 h-4" /> Tech Q&A
@@ -455,9 +484,9 @@ function App() {
           {activeTab === "challenges" ? (
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Challenge Selector Filters */}
-              <div className="p-4 border-b border-[#D7E2EA]/10 bg-[#161616]/30">
+              <div className="p-4 border-b border-borderMain bg-cardSubtle30">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500">
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-textSubtle">
                     Difficulty Level
                   </span>
                   
@@ -469,7 +498,7 @@ function App() {
                         className={`px-2.5 py-1 rounded-full border transition-colors ${
                           difficultyFilter === diff
                             ? "bg-purple-500/25 border-purple-500 text-white"
-                            : "border-white/5 text-zinc-400 hover:border-white/10 hover:text-white"
+                            : "border-borderMain text-textSubtle hover:border-borderMain hover:text-textPrimary"
                         }`}
                       >
                         {diff}
@@ -489,11 +518,11 @@ function App() {
                         className={`flex-shrink-0 px-4 py-3 rounded-2xl border text-left flex flex-col justify-between h-20 w-44 transition-all duration-200 ${
                           activeChallengeId === c.id
                             ? "bg-[#18111F] border-purple-500 shadow-[0_0_15px_rgba(124,58,237,0.15)] text-white"
-                            : "bg-[#161616]/75 border-white/5 hover:border-white/15 text-zinc-300"
+                            : "bg-cardSubtle75 border-borderMain hover:border-borderMain text-textSecondary"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-[10px] font-mono text-zinc-500">#{String(idx + 1).padStart(2, '0')}</span>
+                          <span className="text-[10px] font-mono text-textSubtle">#{String(idx + 1).padStart(2, '0')}</span>
                           {solved && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                         </div>
                         <div className="truncate font-semibold text-xs pr-2">{c.title}</div>
@@ -519,8 +548,8 @@ function App() {
                     </span>
                   </div>
                   {/* Timer UI */}
-                  <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 border border-white/5 rounded-lg px-2.5 py-1 bg-white/5">
-                    <Timer className="w-3.5 h-3.5 text-zinc-400" />
+                  <div className="flex items-center gap-1.5 text-xs font-mono text-textSubtle border border-borderMain rounded-lg px-2.5 py-1 bg-subtleBg">
+                    <Timer className="w-3.5 h-3.5 text-textSubtle" />
                     <span>{formatTime(elapsedSeconds)}</span>
                   </div>
                 </div>
@@ -531,23 +560,23 @@ function App() {
                 </div>
 
                 {/* Persona Request Card */}
-                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 relative overflow-hidden">
+                <div className="rounded-2xl border border-borderMain bg-subtleBg/40 p-5 relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-3 text-zinc-600/40">
                     <Briefcase className="w-12 h-12" />
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xs uppercase font-mono tracking-widest text-purple-400 font-semibold">Business Inquiry</span>
-                    <span className="text-[10px] text-zinc-500">•</span>
-                    <span className="text-xs text-zinc-400 font-medium">{activeChallenge.persona}</span>
+                    <span className="text-[10px] text-textSubtle">•</span>
+                    <span className="text-xs text-textSubtle font-medium">{activeChallenge.persona}</span>
                   </div>
-                  <p className="text-[#D7E2EA] font-medium leading-relaxed italic text-sm sm:text-base">
+                  <p className="text-textPrimary font-medium leading-relaxed italic text-sm sm:text-base">
                     &ldquo;{activeChallenge.prompt}&rdquo;
                   </p>
                 </div>
 
                 {/* Schema Explorer */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-textSubtle flex items-center gap-2">
                     <Database className="w-3.5 h-3.5" /> Schema Explorer
                   </h3>
                   
@@ -556,8 +585,8 @@ function App() {
                       const schema = tableSchemas[tblName];
                       if (!schema) return null;
                       return (
-                        <div key={tblName} className="border border-white/5 rounded-2xl bg-[#161616]/30 overflow-hidden">
-                          <div className="flex items-center justify-between px-4 py-3 bg-[#161616]/60 border-b border-white/5">
+                        <div key={tblName} className="border border-borderMain rounded-2xl bg-cardSubtle30 overflow-hidden">
+                          <div className="flex items-center justify-between px-4 py-3 bg-cardSubtle60 border-b border-borderMain">
                             <span className="font-mono text-sm font-semibold text-white flex items-center gap-2">
                               <span className="size-2 rounded-full bg-purple-500"></span>
                               {schema.name}
@@ -572,9 +601,9 @@ function App() {
 
                           <div className="p-3 grid grid-cols-2 gap-2 text-xs font-mono">
                             {schema.columns.map(col => (
-                              <div key={col.name} className="flex justify-between items-center bg-black/20 border border-white/5 rounded px-2.5 py-1.5">
-                                <span className="text-zinc-300">{col.name}</span>
-                                <span className="text-zinc-500 text-[10px]">{col.type}</span>
+                              <div key={col.name} className="flex justify-between items-center bg-black/20 border border-borderMain rounded px-2.5 py-1.5">
+                                <span className="text-textSecondary">{col.name}</span>
+                                <span className="text-textSubtle text-[10px]">{col.type}</span>
                               </div>
                             ))}
                           </div>
@@ -585,12 +614,12 @@ function App() {
                 </div>
 
                 {/* Hint Section */}
-                <div className="border border-white/5 rounded-2xl bg-[#161616]/10 p-4">
-                  <div className="flex items-center gap-2 mb-1.5 text-zinc-400">
+                <div className="border border-borderMain rounded-2xl bg-cardSubtle10 p-4">
+                  <div className="flex items-center gap-2 mb-1.5 text-textSubtle">
                     <HelpCircle className="w-4 h-4" />
                     <span className="text-xs uppercase font-mono tracking-wider font-semibold">Tutor Hint</span>
                   </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{activeChallenge.hint}</p>
+                  <p className="text-xs text-textSubtle leading-relaxed">{activeChallenge.hint}</p>
                 </div>
               </div>
             </div>
@@ -601,7 +630,7 @@ function App() {
                 <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-amber-400 animate-bounce" /> Unlocked Achievements
                 </h2>
-                <p className="text-xs text-zinc-500 font-mono mt-1 uppercase">Practice SQL & earn custom badge achievements</p>
+                <p className="text-xs text-textSubtle font-mono mt-1 uppercase">Practice SQL & earn custom badge achievements</p>
                 <div className="h-0.5 w-24 bg-purple-500/40 mt-2 rounded"></div>
               </div>
 
@@ -616,7 +645,7 @@ function App() {
                       className={`p-4 rounded-2xl border transition-all duration-300 flex items-start gap-4 ${
                         unlocked 
                           ? "bg-[#1C1427]/40 border-purple-500/50 shadow-[0_0_15px_rgba(124,58,237,0.08)]" 
-                          : "bg-[#161616]/50 border-white/5 opacity-40 select-none"
+                          : "bg-cardSubtle50 border-borderMain opacity-40 select-none"
                       }`}
                     >
                       <div className={`p-3 rounded-xl border ${
@@ -629,7 +658,7 @@ function App() {
                       
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center justify-between">
-                          <h4 className={`text-sm font-bold ${unlocked ? "text-white" : "text-zinc-500"}`}>
+                          <h4 className={`text-sm font-bold ${unlocked ? "text-white" : "text-textSubtle"}`}>
                             {badge.title}
                           </h4>
                           {unlocked ? (
@@ -642,7 +671,7 @@ function App() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-zinc-400 leading-relaxed pr-6">{badge.description}</p>
+                        <p className="text-xs text-textSubtle leading-relaxed pr-6">{badge.description}</p>
                       </div>
                     </div>
                   );
@@ -651,12 +680,12 @@ function App() {
             </div>
           ) : activeTab === "interview" ? (
             /* INTERVIEW CASE STUDIES TAB VIEW */
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#0E0E0E]/40">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-sidebarSubtle40">
               <div>
                 <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-purple-400 animate-pulse" /> FAANG Case Studies
                 </h2>
-                <p className="text-xs text-zinc-500 font-mono mt-1 uppercase">Learn SQL architecture & STAR interview responses</p>
+                <p className="text-xs text-textSubtle font-mono mt-1 uppercase">Learn SQL architecture & STAR interview responses</p>
                 <div className="h-0.5 w-24 bg-purple-500/40 mt-2 rounded"></div>
               </div>
 
@@ -671,7 +700,7 @@ function App() {
                       className={`text-left p-3.5 rounded-xl border transition-all duration-300 ${
                         isSelected
                           ? "bg-purple-500/10 border-purple-500 text-white shadow-[0_0_15px_rgba(124,58,237,0.08)]"
-                          : "bg-[#161616]/50 border-white/5 text-zinc-400 hover:border-white/10 hover:text-zinc-200"
+                          : "bg-cardSubtle50 border-borderMain text-textSubtle hover:border-borderMain hover:text-zinc-200"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -696,10 +725,10 @@ function App() {
               {(() => {
                 const activeStudy = caseStudies.find(c => c.id === selectedCaseStudyId) || caseStudies[0];
                 return (
-                  <div className="border border-white/5 rounded-2xl bg-[#161616]/20 p-5 space-y-5">
-                    <div className="border-b border-white/5 pb-3">
+                  <div className="border border-borderMain rounded-2xl bg-cardSubtle20 p-5 space-y-5">
+                    <div className="border-b border-borderMain pb-3">
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">STAR Schema Response</span>
+                        <span className="text-xs font-mono text-textSubtle uppercase tracking-widest">STAR Schema Response</span>
                         <span className="text-xs font-mono text-purple-400 font-semibold">{activeStudy.domain}</span>
                       </div>
                       <h3 className="text-base font-bold text-white leading-snug">{activeStudy.title}</h3>
@@ -709,28 +738,28 @@ function App() {
                     <div className="space-y-4 text-xs">
                       <div>
                         <span className="font-mono text-amber-400 uppercase tracking-wider font-bold block mb-1">S &mdash; Situation (Context)</span>
-                        <p className="text-zinc-300 leading-relaxed bg-black/10 p-3 rounded-lg border border-white/5">{activeStudy.situation}</p>
+                        <p className="text-textSecondary leading-relaxed bg-black/10 p-3 rounded-lg border border-borderMain">{activeStudy.situation}</p>
                       </div>
                       <div>
                         <span className="font-mono text-sky-400 uppercase tracking-wider font-bold block mb-1">T &mdash; Task (Goal)</span>
-                        <p className="text-zinc-300 leading-relaxed bg-black/10 p-3 rounded-lg border border-white/5">{activeStudy.task}</p>
+                        <p className="text-textSecondary leading-relaxed bg-black/10 p-3 rounded-lg border border-borderMain">{activeStudy.task}</p>
                       </div>
                       <div>
                         <span className="font-mono text-purple-400 uppercase tracking-wider font-bold block mb-1">A &mdash; Action (SQL Plan)</span>
-                        <p className="text-zinc-300 leading-relaxed whitespace-pre-line bg-black/10 p-3 rounded-lg border border-white/5">{activeStudy.action}</p>
+                        <p className="text-textSecondary leading-relaxed whitespace-pre-line bg-black/10 p-3 rounded-lg border border-borderMain">{activeStudy.action}</p>
                       </div>
                       <div>
                         <span className="font-mono text-emerald-400 uppercase tracking-wider font-bold block mb-1">R &mdash; Result (Business Impact)</span>
-                        <p className="text-zinc-300 leading-relaxed bg-black/10 p-3 rounded-lg border border-white/5">{activeStudy.result}</p>
+                        <p className="text-textSecondary leading-relaxed bg-black/10 p-3 rounded-lg border border-borderMain">{activeStudy.result}</p>
                       </div>
                     </div>
 
                     {/* Concepts Tag List */}
                     <div>
-                      <span className="font-mono text-zinc-500 text-[10px] uppercase tracking-wider block mb-2">Key Technical Concepts</span>
+                      <span className="font-mono text-textSubtle text-[10px] uppercase tracking-wider block mb-2">Key Technical Concepts</span>
                       <div className="flex flex-wrap gap-1.5">
                         {activeStudy.concepts.map(tag => (
-                          <span key={tag} className="text-[10px] font-mono text-zinc-300 bg-white/5 border border-white/5 rounded px-2.5 py-1">
+                          <span key={tag} className="text-[10px] font-mono text-textSecondary bg-subtleBg border border-borderMain rounded px-2.5 py-1">
                             {tag}
                           </span>
                         ))}
@@ -740,7 +769,7 @@ function App() {
                     {/* Model SQL Query */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-zinc-500 text-[10px] uppercase tracking-wider">Model SQL Dialect (PostgreSQL/Snowflake)</span>
+                        <span className="font-mono text-textSubtle text-[10px] uppercase tracking-wider">Model SQL Dialect (PostgreSQL/Snowflake)</span>
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText(activeStudy.modelQuery);
@@ -760,7 +789,7 @@ function App() {
                           )}
                         </button>
                       </div>
-                      <pre className="text-[11px] font-mono p-4 rounded-xl border border-white/5 bg-black/40 text-purple-300 overflow-x-auto leading-relaxed max-h-[300px] overflow-y-auto">
+                      <pre className="text-[11px] font-mono p-4 rounded-xl border border-borderMain bg-black/40 text-purple-300 overflow-x-auto leading-relaxed max-h-[300px] overflow-y-auto">
                         <code>{activeStudy.modelQuery}</code>
                       </pre>
                     </div>
@@ -770,12 +799,12 @@ function App() {
             </div>
           ) : (
             /* TECH INTERVIEW Q&A TAB VIEW */
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#0E0E0E]/40">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-sidebarSubtle40">
               <div>
                 <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-purple-400 animate-pulse" /> Technical Interview Q&A
                 </h2>
-                <p className="text-xs text-zinc-500 font-mono mt-1 uppercase">Review core SQL concepts and interview questions</p>
+                <p className="text-xs text-textSubtle font-mono mt-1 uppercase">Review core SQL concepts and interview questions</p>
                 <div className="h-0.5 w-24 bg-purple-500/40 mt-2 rounded"></div>
               </div>
 
@@ -787,7 +816,7 @@ function App() {
                   
                   return (
                     <div key={cat} className="space-y-3">
-                      <h3 className="text-xs font-mono uppercase tracking-widest text-zinc-500 font-bold border-b border-white/5 pb-1">
+                      <h3 className="text-xs font-mono uppercase tracking-widest text-textSubtle font-bold border-b border-borderMain pb-1">
                         {cat}
                       </h3>
                       
@@ -801,7 +830,7 @@ function App() {
                                 className={`text-left p-3.5 rounded-xl border transition-all duration-300 flex items-start gap-2.5 ${
                                   isSelected
                                     ? "bg-purple-500/10 border-purple-500 text-white shadow-[0_0_15px_rgba(124,58,237,0.08)]"
-                                    : "bg-[#161616]/40 border-white/5 text-zinc-400 hover:border-white/10 hover:text-zinc-200"
+                                    : "bg-cardSubtle40 border-borderMain text-textSubtle hover:border-borderMain hover:text-zinc-200"
                                 }`}
                               >
                                 <span className="font-mono text-xs text-purple-400 font-semibold mt-0.5">{q.id}.</span>
@@ -810,14 +839,14 @@ function App() {
 
                               {/* expanded answer block below if selected */}
                               {isSelected && (
-                                <div className="mt-2 ml-4 p-4 border border-white/5 bg-[#121212]/50 rounded-xl space-y-4">
-                                  <div className="text-xs text-zinc-300 whitespace-pre-line leading-relaxed">
+                                <div className="mt-2 ml-4 p-4 border border-borderMain bg-editorSubtle50 rounded-xl space-y-4">
+                                  <div className="text-xs text-textSecondary whitespace-pre-line leading-relaxed">
                                     {q.explanation}
                                   </div>
 
                                   {/* keywords tags */}
                                   <div>
-                                    <span className="font-mono text-zinc-500 text-[10px] uppercase tracking-wider block mb-1.5">Key Terminology to Mention</span>
+                                    <span className="font-mono text-textSubtle text-[10px] uppercase tracking-wider block mb-1.5">Key Terminology to Mention</span>
                                     <div className="flex flex-wrap gap-1.5">
                                       {q.keyKeywords.map(word => (
                                         <span key={word} className="text-[10px] font-mono text-purple-400 bg-purple-500/5 border border-purple-500/10 rounded px-2 py-0.5">
@@ -831,7 +860,7 @@ function App() {
                                   {q.codeExample && (
                                     <div className="space-y-2">
                                       <div className="flex items-center justify-between">
-                                        <span className="font-mono text-zinc-500 text-[10px] uppercase tracking-wider">Example SQL Snippet</span>
+                                        <span className="font-mono text-textSubtle text-[10px] uppercase tracking-wider">Example SQL Snippet</span>
                                         <button
                                           onClick={() => {
                                             navigator.clipboard.writeText(q.codeExample || "");
@@ -851,7 +880,7 @@ function App() {
                                           )}
                                         </button>
                                       </div>
-                                      <pre className="text-[11px] font-mono p-3 rounded-lg border border-white/5 bg-black/40 text-purple-300 overflow-x-auto leading-relaxed">
+                                      <pre className="text-[11px] font-mono p-3 rounded-lg border border-borderMain bg-black/40 text-purple-300 overflow-x-auto leading-relaxed">
                                         <code>{q.codeExample}</code>
                                       </pre>
                                     </div>
@@ -875,14 +904,14 @@ function App() {
         <div className="lg:col-span-7 flex flex-col h-full overflow-hidden bg-black">
           
           {/* SQL Editor Header */}
-          <div className="bg-[#111111]/90 border-b border-[#D7E2EA]/10 px-5 py-3 flex items-center justify-between">
-            <span className="text-xs font-mono tracking-wider text-zinc-400">
+          <div className="bg-headerSubtle90 border-b border-borderMain px-5 py-3 flex items-center justify-between">
+            <span className="text-xs font-mono tracking-wider text-textSubtle">
               SQL Editor Console
             </span>
             <div className="flex gap-2">
               <button
                 onClick={handleResetCode}
-                className="p-2 hover:bg-white/5 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                className="p-2 hover:bg-subtleBg rounded-lg text-textSubtle hover:text-textPrimary transition-colors"
                 title="Reset Code"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -892,7 +921,7 @@ function App() {
                 className={`flex items-center gap-1.5 text-xs font-mono tracking-wider px-3 py-1.5 border rounded-lg transition-colors ${
                   showSolution 
                     ? "bg-purple-500/25 border-purple-500 text-white" 
-                    : "border-white/10 hover:border-white/20 text-zinc-400 hover:text-white"
+                    : "border-borderMain hover:border-borderMain text-textSubtle hover:text-textPrimary"
                 }`}
               >
                 <BookOpen className="w-3.5 h-3.5" />
@@ -907,7 +936,7 @@ function App() {
             <textarea
               value={editorSql}
               onChange={(e) => handleEditorChange(e.target.value)}
-              className="flex-1 w-full bg-[#0C0C0C] text-[#E0E6ED] font-mono text-sm p-5 focus:outline-none resize-none border-b border-[#D7E2EA]/10 leading-relaxed shadow-inner"
+              className="flex-1 w-full bg-bgMain text-textSecondary font-mono text-sm p-5 focus:outline-none resize-none border-b border-borderMain leading-relaxed shadow-inner"
               style={{ fontFamily: "'Fira Code', 'Courier New', monospace" }}
               placeholder="SELECT * FROM table..."
               spellCheck="false"
@@ -927,7 +956,7 @@ function App() {
 
             {/* Solution Drawer */}
             {showSolution && (
-              <div className="absolute inset-0 bg-[#0C0C0C]/95 border-b border-[#D7E2EA]/10 p-6 overflow-y-auto z-10 flex flex-col justify-between">
+              <div className="absolute inset-0 bg-modalBg border-b border-borderMain p-6 overflow-y-auto z-10 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="text-sm uppercase font-mono tracking-widest text-purple-400 font-semibold flex items-center gap-2">
@@ -935,15 +964,15 @@ function App() {
                     </h4>
                     <button 
                       onClick={() => setShowSolution(false)}
-                      className="p-1 hover:bg-white/5 rounded-full text-zinc-400 hover:text-white"
+                      className="p-1 hover:bg-subtleBg rounded-full text-textSubtle hover:text-textPrimary"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                  <pre className="p-4 bg-black/40 border border-white/5 rounded-xl text-[#D7E2EA] font-mono text-xs overflow-x-auto whitespace-pre-wrap select-text leading-relaxed">
+                  <pre className="p-4 bg-black/40 border border-borderMain rounded-xl text-textPrimary font-mono text-xs overflow-x-auto whitespace-pre-wrap select-text leading-relaxed">
                     {activeChallenge.expectedQuery}
                   </pre>
-                  <p className="mt-4 text-xs text-zinc-400 leading-relaxed">
+                  <p className="mt-4 text-xs text-textSubtle leading-relaxed">
                     <strong>Business Rationale:</strong> This query structure evaluates exactly what the business requester needs by aggregating performance logs, grouping details correctly, and sorting outputs to bubbled-up outliers.
                   </p>
                 </div>
@@ -964,7 +993,7 @@ function App() {
             <div className="absolute bottom-4 right-4 flex gap-3 z-0">
               <button
                 onClick={handleRunQuery}
-                className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full font-mono text-xs uppercase tracking-wider transition-all duration-200 hover:scale-105 active:scale-95 border border-white/5 shadow-lg"
+                className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full font-mono text-xs uppercase tracking-wider transition-all duration-200 hover:scale-105 active:scale-95 border border-borderMain shadow-lg"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Run Query</span>
@@ -985,12 +1014,12 @@ function App() {
           </div>
 
           {/* BOTTOM COLUMN (Query Output Console) */}
-          <div className="h-[280px] bg-[#111111]/85 border-t border-[#D7E2EA]/10 flex flex-col overflow-hidden">
+          <div className="h-[280px] bg-headerSubtle85 border-t border-borderMain flex flex-col overflow-hidden">
             
-            <div className="bg-[#111111] px-5 py-2.5 border-b border-[#D7E2EA]/5 flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Output Console</span>
+            <div className="bg-headerMain px-5 py-2.5 border-b border-borderMain flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-textSubtle">Output Console</span>
               {queryResult?.success && queryResult.data && (
-                <span className="text-[10px] font-mono text-zinc-400">
+                <span className="text-[10px] font-mono text-textSubtle">
                   {queryResult.data.length} row(s) returned
                 </span>
               )}
@@ -1014,7 +1043,7 @@ function App() {
                     <h5 className="font-semibold text-sm uppercase tracking-wide">
                       {isCorrect ? "Challenge Solved!" : "Submission Mismatch"}
                     </h5>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{gradeMessage}</p>
+                    <p className="text-xs text-textSubtle mt-1 leading-relaxed">{gradeMessage}</p>
                   </div>
                 </div>
               )}
@@ -1041,16 +1070,16 @@ function App() {
               {queryResult?.success && queryResult.data && (
                 <div className="w-full">
                   {queryResult.data.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-zinc-500 uppercase tracking-widest font-mono">
+                    <div className="p-6 text-center text-xs text-textSubtle uppercase tracking-widest font-mono">
                       Query returned empty set (0 rows)
                     </div>
                   ) : (
-                    <div className="overflow-x-auto border border-white/5 rounded-xl bg-black/20">
+                    <div className="overflow-x-auto border border-borderMain rounded-xl bg-black/20">
                       <table className="w-full text-left font-mono text-xs border-collapse">
                         <thead>
-                          <tr className="bg-white/5 border-b border-white/5">
+                          <tr className="bg-subtleBg border-b border-borderMain">
                             {Object.keys(queryResult.data[0]).map(colHeader => (
-                              <th key={colHeader} className="px-4 py-2 text-zinc-400 font-semibold border-r border-white/5 last:border-r-0">
+                              <th key={colHeader} className="px-4 py-2 text-textSubtle font-semibold border-r border-borderMain last:border-r-0">
                                 {colHeader}
                               </th>
                             ))}
@@ -1058,9 +1087,9 @@ function App() {
                         </thead>
                         <tbody>
                           {queryResult.data.map((row, rowIdx) => (
-                            <tr key={rowIdx} className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] transition-colors">
+                            <tr key={rowIdx} className="border-b border-borderMain last:border-b-0 hover:bg-subtleBg/40 transition-colors">
                               {Object.values(row).map((val: any, colIdx) => (
-                                <td key={colIdx} className="px-4 py-2 border-r border-white/5 last:border-r-0 text-[#E0E6ED] select-text">
+                                <td key={colIdx} className="px-4 py-2 border-r border-borderMain last:border-r-0 text-textSecondary select-text">
                                   {val === null || val === undefined ? <span className="text-zinc-600 italic">NULL</span> : String(val)}
                                 </td>
                               ))}
@@ -1084,16 +1113,16 @@ function App() {
       {/* 4. Table Preview Modal */}
       {previewTableName && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#161616] border border-white/10 rounded-[30px] w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl animate-scale-up">
+          <div className="bg-cardMain border border-borderMain rounded-[30px] w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl animate-scale-up">
             
-            <div className="px-6 py-4 bg-[#1e1e1e] border-b border-white/5 flex items-center justify-between">
+            <div className="px-6 py-4 bg-tableHeaderBg border-b border-borderMain flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-5 h-5 text-purple-400" />
                 <h3 className="font-mono text-sm font-semibold text-white uppercase">Table Preview: {previewTableName}</h3>
               </div>
               <button
                 onClick={() => setPreviewTableName(null)}
-                className="p-1 hover:bg-white/5 rounded-full text-zinc-400 hover:text-white"
+                className="p-1 hover:bg-subtleBg rounded-full text-textSubtle hover:text-textPrimary"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1101,16 +1130,16 @@ function App() {
 
             <div className="flex-1 overflow-auto p-6">
               {previewData.length === 0 ? (
-                <div className="p-8 text-center text-sm text-zinc-500 font-mono uppercase tracking-widest">
+                <div className="p-8 text-center text-sm text-textSubtle font-mono uppercase tracking-widest">
                   No records found in this table
                 </div>
               ) : (
-                <div className="overflow-x-auto border border-white/5 rounded-xl bg-black/20">
+                <div className="overflow-x-auto border border-borderMain rounded-xl bg-black/20">
                   <table className="w-full text-left font-mono text-xs border-collapse">
                     <thead>
-                      <tr className="bg-white/5 border-b border-white/5">
+                      <tr className="bg-subtleBg border-b border-borderMain">
                         {Object.keys(previewData[0]).map(col => (
-                          <th key={col} className="px-4 py-3 text-zinc-400 font-semibold border-r border-white/5 last:border-r-0">
+                          <th key={col} className="px-4 py-3 text-textSubtle font-semibold border-r border-borderMain last:border-r-0">
                             {col}
                           </th>
                         ))}
@@ -1118,9 +1147,9 @@ function App() {
                     </thead>
                     <tbody>
                       {previewData.map((row, rowIdx) => (
-                        <tr key={rowIdx} className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] transition-colors">
+                        <tr key={rowIdx} className="border-b border-borderMain last:border-b-0 hover:bg-subtleBg/40 transition-colors">
                           {Object.values(row).map((val: any, colIdx) => (
-                            <td key={colIdx} className="px-4 py-2.5 border-r border-white/5 last:border-r-0 text-[#E0E6ED] select-text">
+                            <td key={colIdx} className="px-4 py-2.5 border-r border-borderMain last:border-r-0 text-textSecondary select-text">
                               {val === null || val === undefined ? <span className="text-zinc-600 italic">NULL</span> : String(val)}
                             </td>
                           ))}
@@ -1132,7 +1161,7 @@ function App() {
               )}
             </div>
 
-            <div className="px-6 py-3 bg-[#1e1e1e] border-t border-white/5 flex justify-end">
+            <div className="px-6 py-3 bg-tableHeaderBg border-t border-borderMain flex justify-end">
               <button
                 onClick={() => setPreviewTableName(null)}
                 className="px-5 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-xs font-mono uppercase tracking-wider transition-colors"
