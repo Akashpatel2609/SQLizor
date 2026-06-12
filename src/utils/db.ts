@@ -17,7 +17,7 @@ export async function getDb(): Promise<Database> {
   
   initPromise = (async () => {
     const SQL = await initSqlJs({
-      locateFile: (file: string) => `/${file}`
+      locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/sql.js@1.14.1/dist/${file}`
     });
     dbInstance = new SQL.Database();
     
