@@ -374,15 +374,15 @@ export const seedDatabaseQueries = `
   INSERT INTO friendships VALUES (1003, 1005, '2026-02-01');
 
   CREATE TABLE posts(post_id INT, user_id INT, post_date DATE, likes_count INT);
-  INSERT INTO posts VALUES (201, 1001, '2025-12-26', 12);
-  INSERT INTO posts VALUES (202, 1002, '2025-12-30', 5);
-  INSERT INTO posts VALUES (203, 1001, '2025-12-31', 60);
-  INSERT INTO posts VALUES (204, 1004, '2026-01-03', 25);
-  INSERT INTO posts VALUES (205, 1006, '2026-01-12', 110);
-  INSERT INTO posts VALUES (206, 1007, '2026-01-16', 45);
-  INSERT INTO posts VALUES (207, 1003, '2026-01-18', 0);
-  INSERT INTO posts VALUES (208, 1005, '2026-01-22', 80);
-  INSERT INTO posts VALUES (209, 1008, '2026-01-25', 120);
+  INSERT INTO posts VALUES (201, 1001, '2025-12-26 10:30:00', 12);
+  INSERT INTO posts VALUES (202, 1002, '2025-12-30 14:15:00', 5);
+  INSERT INTO posts VALUES (203, 1001, '2025-12-31 10:45:00', 60);
+  INSERT INTO posts VALUES (204, 1004, '2026-01-03 16:20:00', 25);
+  INSERT INTO posts VALUES (205, 1006, '2026-01-12 10:05:00', 110);
+  INSERT INTO posts VALUES (206, 1007, '2026-01-16 18:30:00', 45);
+  INSERT INTO posts VALUES (207, 1003, '2026-01-18 14:50:00', 0);
+  INSERT INTO posts VALUES (208, 1005, '2026-01-22 10:00:00', 80);
+  INSERT INTO posts VALUES (209, 1008, '2026-01-25 18:15:00', 120);
 
   CREATE TABLE titles(title_id INT, name VARCHAR, type VARCHAR, genre VARCHAR, release_year INT);
   INSERT INTO titles VALUES (301, 'Stranger Things', 'Show', 'Sci-Fi', 2016);
@@ -718,8 +718,8 @@ export const challenges: Challenge[] = [
     company: "Netflix",
     persona: "VP of Audience Engagement",
     prompt: "Find the user IDs of users who watched content on Netflix for 3 or more consecutive days. Return the user_id sorted in ascending order.",
-    hint: "Self-join watch_history three times on matching user_id where DATEDIFF(day, w1.watch_date, w2.watch_date) = 1 and DATEDIFF(day, w1.watch_date, w3.watch_date) = 2.",
-    expectedQuery: "SELECT DISTINCT w1.user_id FROM watch_history w1 JOIN watch_history w2 ON w1.user_id = w2.user_id AND DATEDIFF(day, w1.watch_date, w2.watch_date) = 1 JOIN watch_history w3 ON w1.user_id = w3.user_id AND DATEDIFF(day, w1.watch_date, w3.watch_date) = 2 ORDER BY w1.user_id",
+    hint: "Self-join watch_history three times on matching user_id where the difference in julian days is 1 and 2: julianday(w2.watch_date) - julianday(w1.watch_date) = 1 and julianday(w3.watch_date) - julianday(w1.watch_date) = 2.",
+    expectedQuery: "SELECT DISTINCT w1.user_id FROM watch_history w1 JOIN watch_history w2 ON w1.user_id = w2.user_id AND CAST(julianday(w2.watch_date) - julianday(w1.watch_date) AS INTEGER) = 1 JOIN watch_history w3 ON w1.user_id = w3.user_id AND CAST(julianday(w3.watch_date) - julianday(w1.watch_date) AS INTEGER) = 2 ORDER BY w1.user_id",
     schemaTables: ["watch_history"]
   },
   {
@@ -806,8 +806,8 @@ export const challenges: Challenge[] = [
     company: "IT Support",
     persona: "Director of Customer Support Operations",
     prompt: "Audit our response SLA metrics. For each active support agent (is_active = 1), calculate the average resolution time in hours for their completed (resolved) tickets. Return the agent's name and average resolution hours (rounded to 1 decimal place).",
-    hint: "Join agents and tickets, filter where is_active = 1 and status = 'resolved', group by agent_id and name. Use AVG(DATEDIFF(hour, created_at, resolved_at)).",
-    expectedQuery: "SELECT a.name, ROUND(AVG(DATEDIFF(hour, t.created_at, t.resolved_at)), 1) AS avg_resolution_hours FROM agents a JOIN tickets t ON a.agent_id = t.assignee_id WHERE a.is_active = 1 AND t.status = 'resolved' GROUP BY a.agent_id, a.name",
+    hint: "Join agents and tickets, filter where is_active = 1 and status = 'resolved', group by agent_id and name. Calculate duration using: (strftime('%s', resolved_at) - strftime('%s', created_at)) / 3600.0.",
+    expectedQuery: "SELECT a.name, ROUND(AVG((strftime('%s', t.resolved_at) - strftime('%s', t.created_at)) / 3600.0), 1) AS avg_resolution_hours FROM agents a JOIN tickets t ON a.agent_id = t.assignee_id WHERE a.is_active = 1 AND t.status = 'resolved' GROUP BY a.agent_id, a.name",
     schemaTables: ["agents", "tickets"]
   },
   {
@@ -861,8 +861,8 @@ export const challenges: Challenge[] = [
     company: "Meta",
     persona: "VP of Product Strategy",
     prompt: "Our engineering group wants to optimize database indexing for peak post traffic. Find the peak post upload hours. Show the hour of post upload as peak_hour and the count of posts uploaded in that hour. Sort by post count descending, and then by peak_hour ascending.",
-    hint: "Use the HOUR() function on post_date, group by that hour, and sort by the aggregated count descending, and hour ascending.",
-    expectedQuery: "SELECT HOUR(post_date) AS peak_hour, COUNT(*) AS post_count FROM posts GROUP BY HOUR(post_date) ORDER BY post_count DESC, peak_hour ASC",
+    hint: "Use strftime('%H', post_date) cast as integer, group by that hour, and sort by the aggregated count descending, and hour ascending.",
+    expectedQuery: "SELECT CAST(strftime('%H', post_date) AS INTEGER) AS peak_hour, COUNT(*) AS post_count FROM posts GROUP BY peak_hour ORDER BY post_count DESC, peak_hour ASC",
     schemaTables: ["posts"]
   },
   {
